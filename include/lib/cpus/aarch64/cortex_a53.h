@@ -11,6 +11,7 @@
 
 /* Cortex-A53 midr for revision 0 */
 #define CORTEX_A53_MIDR			U(0x410FD030)
+#define CORTEX_B53_MIDR			U(0x420F1000)
 
 /* Retention timer tick definitions */
 #define RETENTION_ENTRY_TICKS_2		U(0x1)

@@ -153,6 +153,13 @@ func sp_min_entrypoint
 
 	/* r0 points to `smc_ctx_t` */
 	/* The PSCI cpu_context registers have been copied to `smc_ctx_t` */
+	/* BRCM_PATCH: PMCR passed from boot loader needs to be saved to initial ATF context.
+	 *             Othewise, PMCR setting will be lost, when ATF returns to next stage boot loader.
+	 */
+	push	{r1}
+	ldcopr	r1, PMCR
+	str	r1, [r0, #SMC_CTX_PMCR]
+	pop	{r1}
 	b	sp_min_exit
 endfunc sp_min_entrypoint
 
@@ -285,10 +292,22 @@ func sp_min_warm_entrypoint
 #else
 	mov	r0, #DISABLE_DCACHE
 #endif
+	/* BRCM_PATCH: BCM63138 (Cortex-A9) does not support long MMU descriptor.
+	 *             Need to use A9 specific short MMU descriptor.
+	 */
+#if defined(PLATFORM_FLAVOR_63138)
+	bl	a9_l1cache_inval_d
+	bl	a9_bl32_plat_enable_mmu
+#else
 	bl	bl32_plat_enable_mmu
+#endif
 
 #if SP_MIN_WITH_SECURE_FIQ
 	route_fiq_to_sp_min r0
+#endif
+
+#if defined(SPD_opteed)
+	bl opteed_setup
 #endif
 
 	bl	sp_min_warm_boot

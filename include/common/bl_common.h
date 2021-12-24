@@ -26,8 +26,9 @@
  * Constants to identify the location of a memory region in a given memory
  * layout.
 ******************************************************************************/
-#define TOP	U(0x1)
-#define BOTTOM	U(0x0)
+/* BRCM_PATCH: Avoid symbol conflict with Broadcom */
+#define ATF_TOP	U(0x1)
+#define ATF_BOTTOM	U(0x0)
 
 /*******************************************************************************
  * Constants to indicate type of exception to the common exception handler.

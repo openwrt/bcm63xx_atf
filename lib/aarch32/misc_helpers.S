@@ -7,6 +7,7 @@
 #include <arch.h>
 #include <asm_macros.S>
 #include <assert_macros.S>
+.arch_extension sec
 
 	.globl	smc
 	.globl	zeromem

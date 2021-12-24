@@ -100,8 +100,16 @@
 	 * ---------------------------------------------------------------------
 	 */
 #if ((ARM_ARCH_MAJOR > 7) || defined(ARMV7_SUPPORTS_VFP)) && !(__SOFTFP__)
+	/* BRCM_PATCH: BCM63138 does not have NEON in 2nd CPU */
+#if defined (PLATFORM_FLAVOR_63138)
+	bl	plat_my_core_pos
+	cmp	r0, #0
+	ldreq	r0, =(FPEXC_RESET_VAL | FPEXC_EN_BIT)
+	vmsreq	FPEXC, r0
+#else
 	ldr	r0, =(FPEXC_RESET_VAL | FPEXC_EN_BIT)
 	vmsr	FPEXC, r0
+#endif
 	isb
 #endif
 
@@ -146,7 +154,9 @@
 #else
 	ldr	r0, =(PMCR_RESET_VAL | PMCR_DP_BIT)
 #endif
+	/* BRCM_PATCH: Do not overwrite the setting done by BRCM boot loaders
 	stcopr	r0, PMCR
+	*/
 
 	/*
 	 * If Data Independent Timing (DIT) functionality is implemented,

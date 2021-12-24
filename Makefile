@@ -268,8 +268,9 @@ ifeq ($(findstring clang,$(notdir $(CC))),)
 # not using clang
 WARNINGS	+=		-Wunused-but-set-variable	\
 				-Wmaybe-uninitialized		\
-				-Wpacked-bitfield-compat	\
-				-Wshift-overflow=2
+				-Wpacked-bitfield-compat
+# BRCM_PATCH: Conflicts with toolchain
+#				-Wshift-overflow=2
 else
 # using clang
 WARNINGS	+=		-Wshift-overflow -Wshift-sign-overflow
@@ -283,10 +284,16 @@ CPPFLAGS		=	${DEFINES} ${INCLUDES} ${MBEDTLS_INC} -nostdinc		\
 				-Wmissing-include-dirs $(ERRORS) $(WARNINGS)
 ASFLAGS			+=	$(CPPFLAGS) $(ASFLAGS_$(ARCH))			\
 				-ffreestanding -Wa,--fatal-warnings
+# BRCM_PATCH: Code optimization for Cortex-A9 brings instability
+ifeq ($(strip $(BRCM_CHIP)),63138)
+TF_CFLAGS		+=	$(CPPFLAGS) $(TF_CFLAGS_$(ARCH))		\
+				-ffreestanding -fno-builtin -Wall -std=gnu99	\
+				-O0 -ffunction-sections -fdata-sections
+else
 TF_CFLAGS		+=	$(CPPFLAGS) $(TF_CFLAGS_$(ARCH))		\
 				-ffreestanding -fno-builtin -Wall -std=gnu99	\
 				-Os -ffunction-sections -fdata-sections
-
+endif
 ifeq (${SANITIZE_UB},on)
 TF_CFLAGS		+=	-fsanitize=undefined -fno-sanitize-recover
 endif
@@ -364,7 +371,7 @@ INCLUDE_TBBR_MK		:=	1
 
 ifneq (${SPD},none)
 ifeq (${ARCH},aarch32)
-        $(error "Error: SPD is incompatible with AArch32.")
+#        $(error "Error: SPD is incompatible with AArch32.")
 endif
 ifdef EL3_PAYLOAD_BASE
         $(warning "SPD and EL3_PAYLOAD_BASE are incompatible build options.")
@@ -718,7 +725,9 @@ endif
 # This is done after including the platform specific makefile to allow the
 # platform to overwrite the default options
 ################################################################################
-
+# BRCM_PATCH: Need to add Broadcom SoC specific platform profiles
+$(eval $(call add_define,PLATFORM_FLAVOR_${BRCM_CHIP}))
+$(eval $(call add_define,_BCM9${BRCM_CHIP}_))
 $(eval $(call add_define,ARM_ARCH_MAJOR))
 $(eval $(call add_define,ARM_ARCH_MINOR))
 $(eval $(call add_define,COLD_BOOT_SINGLE_CPU))

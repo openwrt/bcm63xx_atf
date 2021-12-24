@@ -12,6 +12,7 @@
 #include <lib/pmf/pmf_asm_macros.S>
 #include <lib/runtime_instr.h>
 #include <lib/xlat_tables/xlat_mmu_helpers.h>
+#include <context.h>
 
 	.globl	bl31_entrypoint
 	.globl	bl31_warm_entrypoint
@@ -129,6 +130,13 @@ func bl31_entrypoint
 	sub	x1, x1, x0
 	bl	clean_dcache_range
 
+/* BRCM_PATCH: Save the CTX_PMCR_EL0 configured by boot loader
+*/
+	msr	spsel, #MODE_SP_ELX
+	mrs	x17, pmcr_el0
+	str	x17, [sp, #CTX_EL3STATE_OFFSET + CTX_PMCR_EL0]
+	msr	spsel, #MODE_SP_EL0
+
 	b	el3_exit
 endfunc bl31_entrypoint
 
@@ -138,6 +146,7 @@ endfunc bl31_entrypoint
 	 * warmboot entrypoint
 	 * --------------------------------------------------------------------
 	 */
+	.align 8
 func bl31_warm_entrypoint
 #if ENABLE_RUNTIME_INSTRUMENTATION
 
